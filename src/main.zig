@@ -96,12 +96,7 @@ pub fn main() !void {
          const package_start = "{\"name\":\"kernel\",\"main\":\"index.js\",\"location\":\"";
          const package_end = "\"}";
 
-         var package_json = try allocator.alloc(u8, package_start.len + kernel_path.len + package_end.len);
-         mem.copy(u8, package_json[0..], package_start);
-         mem.copy(u8, package_json[package_start.len..], kernel_path);
-         mem.copy(u8, package_json[package_start.len+kernel_path.len..], package_end);
-
-         try package.writeAll(package_json);
+         try package.writeAll(try replaceSlashes(try concat(&[_][]const u8{ package_start, kernel_path, package_end })));
       }
    }
    exit();
@@ -128,4 +123,35 @@ pub fn exit() void {
       debug.print("Done in: {d}\n", .{ std.fmt.fmtDuration(end_time) });
    }
    std.os.exit(0);
+}
+
+pub fn concat(strings: []const []const u8) ![]u8 {
+   var totalLength: i128 = 0;
+
+   for (strings) |string| {
+      totalLength += @intCast(i128, string.len);
+   }
+
+   const result = try allocator.alloc(u8, @intCast(usize, totalLength));
+   var startLength: i128 = 0;
+   for (strings) |string| {
+      mem.copy(u8, result[@intCast(usize, startLength)..string.len], string);
+      startLength += @intCast(i128, string.len);
+   }
+
+   return result;
+}
+
+pub fn replaceSlashes(string: []const u8) ![]u8 {
+   const result = try allocator.alloc(u8, string.len);
+   var i: i128 = 0;
+   for (string) |char| {
+      if (char == '\\') {
+         result[@intCast(usize, i)] = '/';
+      } else {
+         result[@intCast(usize, i)] = char;
+      }
+      i += 1;
+   }
+   return result;
 }
