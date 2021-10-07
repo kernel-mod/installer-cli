@@ -127,23 +127,6 @@ pub fn exit() void {
    std.os.exit(0);
 }
 
-pub fn concat(strings: []const []const u8) ![]u8 {
-   var totalLength: i128 = 0;
-
-   for (strings) |string| {
-      totalLength += @intCast(i128, string.len);
-   }
-
-   const result = try allocator.alloc(u8, @intCast(usize, totalLength));
-   var startLength: i128 = 0;
-   for (strings) |string| {
-      mem.copy(u8, result[@intCast(usize, startLength)..string.len], string);
-      startLength += @intCast(i128, string.len);
-   }
-
-   return result;
-}
-
 pub fn replaceSlashes(string: []const u8) ![]u8 {
    const result = try allocator.alloc(u8, string.len);
    var i: i128 = 0;
