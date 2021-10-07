@@ -1,5 +1,5 @@
 const std = @import("std");
-const deps = @import("./deps.zig");
+const pkgs = @import("deps.zig").pkgs;
 
 pub fn build(b: *std.build.Builder) void {
     // Standard target options allows the person running `zig build` to choose
@@ -17,7 +17,8 @@ pub fn build(b: *std.build.Builder) void {
     exe.single_threaded = true;
     exe.setTarget(target);
     exe.setBuildMode(mode);
-    deps.addAllTo(exe);
+    exe.linkLibC();
+    pkgs.addAllTo(exe);
     exe.install();
 
     const run_cmd = exe.run();
