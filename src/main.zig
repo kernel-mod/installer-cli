@@ -7,7 +7,7 @@ const mem = std.mem;
 const time = std.time;
 const fs = std.fs;
 
-const allocator = std.heap.page_allocator;
+const allocator = std.heap.c_allocator;
 
 var timer: ?time.Timer = null;
 
@@ -96,7 +96,9 @@ pub fn main() !void {
          const package_start = "{\"name\":\"kernel\",\"main\":\"index.js\",\"location\":\"";
          const package_end = "\"}";
 
-         try package.writeAll(try replaceSlashes(try concat(&[_][]const u8{ package_start, kernel_path, package_end })));
+         const package_json = try mem.join(allocator, "", &[_][]const u8{ package_start, kernel_path, package_end });
+         defer allocator.free(package_json);
+         try package.writeAll(try replaceSlashes(package_json));
       }
    }
    exit();
