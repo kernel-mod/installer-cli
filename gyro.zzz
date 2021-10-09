@@ -2,7 +2,7 @@ deps:
   clap:
     src:
       github:
-        user: Hejsil
+        user: Kyza
         repo: zig-clap
         ref: zig-master
     root: clap.zig
