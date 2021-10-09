@@ -21,7 +21,7 @@ jobs:
 
       - uses: mattnite/setup-gyro@v1
       
-      - run: gyro update
+      - run: gyro fetch
       
       - run: zig build --build-file "build-all.zig"
 
