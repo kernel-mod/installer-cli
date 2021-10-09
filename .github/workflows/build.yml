@@ -31,7 +31,7 @@ jobs:
           name: ${{ github.GITHUB_SHA }}
           tag_name: ${{ github.GITHUB_REF }}
           # Note-worthy description of changes in release
-          body: ${{ join(github.event.commits.\*.message, '\n') }}
+          body: ${{ join(github.event.commits.*.message, '\n') }}
           # Newline-delimited list of path globs for asset files to upload
           files: "zig-out/bin/*"
           # Fails if any of the `files` globs match nothing. Defaults to false
