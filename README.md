@@ -1,3 +1,11 @@
+## Download
+
+Get the build for your system from [releases](https://github.com/kernel-mod/installer-cli/releases/latest).
+
+## Community
+
+Join on [Discord](https://discord.gg/8mPTjTZ4SZ) or [Matrix](https://matrix.to/#/!iWdiwStUmqwDcNfYbG:bigdumb.gq?via=bigdumb.gq&via=catvibers.me&via=matrix.org).
+
 ## Build From Source
 
 Real instructions coming soon. You need [Zig 0.9.0](https://ziglang.org/download/) or higher and [Gyro](https://github.com/mattnite/gyro).
