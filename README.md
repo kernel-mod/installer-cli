@@ -10,7 +10,7 @@ installer-cli -i path/to/electron/app -k path/to/kernel
 
 The `-i` flag specifies the path to the Electron app to inject into.
 
-It should be the path to the directory below the `resources` folder.
+It should be the path to the directory above the `resources` folder.
 
 For example on Windows for Discord: `C:/Users/Kyza/AppData/Local/Discord/app-XXXX/`
 
