@@ -25,19 +25,16 @@ jobs:
       
       - run: zig build --build-file "build-all.zig"
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2.2.4
+      - name: Release
+        # You may pin to the exact commit or the version.
+        # uses: softprops/action-gh-release@6034af24fba4e5a8e975aaa6056554efe4c794d0
+        uses: softprops/action-gh-release@v0.1.13
         with:
-          # Artifact name
-          # A file, directory or wildcard pattern that describes what to upload
-          path: "zig-out/bin/*"
-          if-no-files-found: "error"
-          
-#       - name: Release Drafter
-#         # You may pin to the exact commit or the version.
-#         # uses: release-drafter/release-drafter@fe52e97d262833ae07d05efaf1a239df3f1b5cd4
-#         uses: release-drafter/release-drafter@v5.15.0
-#         with:
-#           publish: true
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Note-worthy description of changes in release
+          body: ""
+          # Newline-delimited list of path globs for asset files to upload
+          files: "zig-out/bin/*"
+          # Fails if any of the `files` globs match nothing. Defaults to false
+          fail_on_unmatched_files: true
+          # Repository to make releases against, in <owner>/<repo> format
+          repository: "kernel-mod/installer-cli"
