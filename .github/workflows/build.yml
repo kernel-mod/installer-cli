@@ -32,7 +32,7 @@ jobs:
           version: master
       - uses: mattnite/setup-gyro@v1
       - run: gyro build -Drelease-fast=true -Dtarget=x86_64-windows
-      - run: gyro build -Drelease-fast=true -Dtarget=i368-windows
+      - run: gyro build -Drelease-fast=true -Dtarget=i386-windows
       - run: gyro build -Drelease-fast=true -Dtarget=x86_64-linux
-      - run: gyro build -Drelease-fast=true -Dtarget=i368-linux
+      - run: gyro build -Drelease-fast=true -Dtarget=i386-linux
       - run: gyro build -Drelease-fast=true -Dtarget=x86_64-macos
