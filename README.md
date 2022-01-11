@@ -12,14 +12,18 @@ Real instructions coming soon. You need [Zig 0.9.0](https://ziglang.org/download
 
 ## Usage
 
+#### Windows
 ```bash
-installer-cli -i path/to/electron/app -k path/to/kernel
+installer-cli -i C:/Users/Username/AppData/Roaming/Discord/app-X.X.XXX -k location/of/kernel
+```
+
+#### MacOS
+```zsh
+./installer-cli -i /Applications/Discord.app/Contents -k ~/location/of/kernel
 ```
 
 The `-i` flag specifies the path to the Electron app to inject into.
 
 It should be the path to the directory above the `resources` folder.
-
-For example on Windows for Discord: `C:/Users/Kyza/AppData/Local/Discord/app-XXXX/`
 
 The `-k` flag specifies the path to the folder Kernel is in.
