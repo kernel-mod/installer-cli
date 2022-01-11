@@ -10,16 +10,24 @@ Join on [Discord](https://discord.gg/8mPTjTZ4SZ) or [Matrix](https://matrix.to/#
 
 Real instructions coming soon. You need [Zig 0.9.0](https://ziglang.org/download/) or higher and [Gyro](https://github.com/mattnite/gyro).
 
-## Usage
+## Installation
 
+#### Windows
 ```bash
-installer-cli -i path/to/electron/app -k path/to/kernel
+installer-cli -i C:/Users/Username/AppData/Roaming/Discord/app-X.X.XXX -k location/of/kernel
 ```
 
-The `-i` flag specifies the path to the Electron app to inject into.
+#### MacOS
+```zsh
+./installer-cli -i /Applications/Discord.app/Contents -k ~/location/of/kernel
+```
 
-It should be the path to the directory above the `resources` folder.
+## Flags
 
-For example on Windows for Discord: `C:/Users/Kyza/AppData/Local/Discord/app-XXXX/`
+`-h`, `--help` displays help and exits.
 
-The `-k` flag specifies the path to the folder Kernel is in.
+`-i`, `--inject <string>` injects to the Electron application. 
+
+`-u`, `--uninject <string>` uninjects the Electron application.
+
+`-k`, `--kernel <string>` injects using the path of where the `kernel.asar` and `kernel` parent folder is.
