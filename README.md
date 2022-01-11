@@ -12,14 +12,14 @@ Real instructions coming soon. You need [Zig 0.9.0](https://ziglang.org/download
 
 ## Installation
 
+#### Linux / MacOS
+```zsh
+./installer-cli -i /Applications/Discord.app/Contents -k ~/location/of/kernel
+```
+
 #### Windows
 ```bash
 installer-cli -i C:/Users/Username/AppData/Roaming/Discord/app-X.X.XXX -k location/of/kernel
-```
-
-#### MacOS
-```zsh
-./installer-cli -i /Applications/Discord.app/Contents -k ~/location/of/kernel
 ```
 
 ## Flags
