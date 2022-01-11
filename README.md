@@ -13,11 +13,13 @@ Real instructions coming soon. You need [Zig 0.9.0](https://ziglang.org/download
 ## Installation
 
 #### Linux / MacOS
+
 ```zsh
 ./installer-cli -i /Applications/Discord.app/Contents -k ~/location/of/kernel
 ```
 
 #### Windows
+
 ```bash
 installer-cli -i C:/Users/Username/AppData/Roaming/Discord/app-X.X.XXX -k location/of/kernel
 ```
@@ -31,3 +33,17 @@ installer-cli -i C:/Users/Username/AppData/Roaming/Discord/app-X.X.XXX -k locati
 `-u`, `--uninject <string>` uninjects the Electron application.
 
 `-k`, `--kernel <string>` injects using the path of where the `kernel.asar` and `kernel` parent folder is.
+
+## Troubleshooting
+
+#### Linux / MacOS
+
+```zsh
+chmod 755 ./installer-cli
+```
+
+or
+
+```zsh
+chmod +x ./installer-cli
+```
