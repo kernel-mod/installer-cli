@@ -47,3 +47,7 @@ or
 ```zsh
 chmod +x ./installer-cli
 ```
+
+Adds execution permissions in order for the script to run.
+
+Linux may require `sudo` in front.
