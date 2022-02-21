@@ -43,7 +43,13 @@ pub fn main() !void {
          const kernel_path = try fs.path.resolve(allocator, &[_][]const u8{ kernel });
 
          const app_path = try fs.path.resolve(allocator, &[_][]const u8{ inject });
-         const resources_path = try fs.path.join(allocator, &[_][]const u8{ app_path, "resources" });
+
+         var resources_path = try fs.path.join(allocator, &[_][]const u8{ app_path, "resources" });
+
+         // Test if the folder is (probably) either a valid electron app path or an app resources path.
+         _ = fs.openDirAbsolute(resources_path, .{}) catch {
+            resources_path = app_path;
+         };
 
          const app_folder_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app" });
          const app_asar_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app.asar" });
@@ -53,9 +59,6 @@ pub fn main() !void {
 
          const app_original_folder_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app-original" });
          const app_original_asar_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app-original.asar" });
-
-         // Test if the folder is (probably) a valid Electron app.
-         _ = fs.openDirAbsolute(resources_path, .{}) catch invalidAppDir();
 
          debug.print("Detecting injection...\n", .{});
          var injected = true;
