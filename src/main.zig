@@ -13,7 +13,7 @@ var timer: ?time.Timer = null;
 
 pub fn main() !void {
    timer = try time.Timer.start();
-   
+
    const params = comptime [_]clap.Param(clap.Help) {
       clap.parseParam("-h, --help Display this help and exit.") catch unreachable,
       clap.parseParam("-i, --inject <STR> The path to the Electron app.") catch unreachable,
@@ -27,14 +27,6 @@ pub fn main() !void {
       return err;
    };
    defer args.deinit();
-
-   if (args.flag("--help")) {
-      try clap.help(
-         io.getStdErr().writer(),
-         comptime &params
-      );
-      return;
-   }
 
    if (args.option("--inject")) |inject| {
       if (args.option("--kernel")) |kernel| {
@@ -94,7 +86,19 @@ pub fn main() !void {
          defer index.close();
          defer package.close();
 
-         try index.writeAll("const path=require(\"path\");require(path.join(require(path.join(__dirname,\"package.json\")).location,\"kernel.asar\"));");
+         try index.writeAll(
+            \\const pkg = require("./package.json");
+            \\const Module = require("module");
+            \\const path = require("path");
+            \\
+            \\try {
+            \\  const kernel = require(path.join(pkg.location, "kernel.asar"));
+            \\  if (kernel?.default) kernel.default({ startOriginal: true });
+            \\} catch(e) {
+            \\  console.error("Kernel failed to load: ", e.message);
+            \\  return Module._load(path.join(__dirname, "..", "app-original.asar"), null, true);
+            \\}
+         );
 
          const package_start = "{\"name\":\"kernel\",\"main\":\"index.js\",\"location\":\"";
          const package_end = "\"}";
@@ -102,31 +106,35 @@ pub fn main() !void {
          const package_json = try mem.join(allocator, "", &[_][]const u8{ package_start, kernel_path, package_end });
          defer allocator.free(package_json);
          try package.writeAll(try replaceSlashes(package_json));
+         if (timer) |t| {
+            const end_time = t.read();
+            debug.print("Done in: {d}\n", .{ std.fmt.fmtDuration(end_time) });
+         }
+
+         return std.os.exit(0);
       }
    }
-   exit();
+
+   try clap.help(
+      io.getStdErr().writer(),
+      comptime &params
+   );
+
+   std.os.exit(0);
 }
 
 pub fn invalidAppDir() void {
    debug.print("Invalid Electron app directory.\n", .{});
-   exit();
+   std.os.exit(0);
 }
 
 pub fn alreadyInjected() void {
    debug.print("Something is already injected there.\n", .{});
-   exit();
+   std.os.exit(0);
 }
 
 pub fn appRunning() void {
    debug.print("The app is running, close it before injecting.\n", .{});
-   exit();
-}
-
-pub fn exit() void {
-   if (timer) |t| {
-      const end_time = t.read();
-      debug.print("Done in: {d}\n", .{ std.fmt.fmtDuration(end_time) });
-   }
    std.os.exit(0);
 }
 
