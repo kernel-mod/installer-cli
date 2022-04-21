@@ -83,7 +83,19 @@ pub fn main() !void {
          defer index.close();
          defer package.close();
 
-         try index.writeAll("const path=require(\"path\");require(path.join(require(path.join(__dirname,\"package.json\")).location,\"kernel.asar\"));");
+         try index.writeAll(
+            \\const pkg = require("./package.json");
+            \\const Module = require("module");
+            \\const path = require("path");
+            \\
+            \\try {
+            \\  const kernel = require(path.join(pkg.location, "kernel.asar"));
+            \\  if (kernel?.default) kernel.default({ startOriginal: true });
+            \\} catch(e) {
+            \\  console.error("Kernel failed to load: ", e.message);
+            \\  return Module._load(path.join(__dirname, "..", "app-original.asar"), null, true);
+            \\}
+         );
 
          const package_start = "{\"name\":\"kernel\",\"main\":\"index.js\",\"location\":\"";
          const package_end = "\"}";
