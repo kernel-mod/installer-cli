@@ -96,7 +96,7 @@ pub fn main() !void {
             \\  if (kernel?.default) kernel.default({ startOriginal: true });
             \\} catch(e) {
             \\  console.error("Kernel failed to load: ", e.message);
-            \\  return Module._load(path.join(__dirname, "..", "app-original.asar"), null, true);
+            \\  Module._load(path.join(__dirname, "..", "app-original.asar"), null, true);
             \\}
          );
 
