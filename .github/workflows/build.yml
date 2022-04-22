@@ -14,7 +14,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
         with:
-          version: master
+          version: 0.9.1
 
       - uses: mattnite/setup-gyro@v1
       
