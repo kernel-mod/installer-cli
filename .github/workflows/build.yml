@@ -22,7 +22,7 @@ jobs:
       
       - run: zig build --build-file "build-all.zig"
       
-      - run: rm zig-out/bin/installer-cli
+#       - run: rm zig-out/bin/installer-cli
 
       - name: Release
         uses: softprops/action-gh-release@v0.1.13
