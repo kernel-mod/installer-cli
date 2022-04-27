@@ -100,7 +100,7 @@ pub fn main() !void {
             \\}
          );
 
-         const package_start = "{\"name\":\"kernel\",\"main\":\"index.js\",\"location\":\"";
+         const package_start = "{\"main\":\"index.js\",\"location\":\"";
          const package_end = "\"}";
 
          const package_json = try mem.join(allocator, "", &[_][]const u8{ package_start, kernel_path, package_end });
