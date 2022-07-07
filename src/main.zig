@@ -45,7 +45,7 @@ pub fn main() !u8 {
       var resources_dir: ?std.fs.Dir = null;
       var it = app_dir.iterate();
       while (it.next() catch {
-         try stdOut.writeAll("Failed to iterate through the application directory.");
+         try stdOut.writeAll("Failed to iterate through the application directory, quitting.\n");
          return 1;
       }) |entry| {
          if (!std.mem.eql(u8, "resources", entry.name)) continue;
@@ -66,7 +66,7 @@ pub fn main() !u8 {
       var state: InjectState = .{};
       it = resources_dir.?.iterate();
       while (it.next() catch {
-         try stdOut.writeAll("Failed to iterate through the resources directory.");
+         try stdOut.writeAll("Failed to iterate through the resources directory, quitting.\n");
          return 1;
       }) |entry| {
          // Can't switch on non-comptime prongs, e.g switch (true) {...} isn't possible.
