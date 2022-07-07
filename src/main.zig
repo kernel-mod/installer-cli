@@ -124,19 +124,7 @@ pub fn main() !u8 {
       };
       defer package_json.close();
 
-      try index_js.writeAll(
-         \\const pkg = require("./package.json");
-         \\const Module = require("module");
-         \\const path = require("path");
-         \\
-         \\try {
-         \\    const kernel = require(path.join(pkg.location, "kernel.asar"));
-         \\    if (kernel?.default) kernel.default({ startOriginal: true });
-         \\} catch(e) {
-         \\    console.error("Kernel failed to load: ", e.message);
-         \\    Module._load(path.join(__dirname, "..", "app-original.asar"), null, true);
-         \\}
-      );
+      try index_js.writeAll(@embedFile("./index.js"));
 
       var package_json_text = try std.mem.join(
          allocator, "",
