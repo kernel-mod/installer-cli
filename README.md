@@ -40,8 +40,15 @@
     const std = @import("std");
 
     pub const pkgs = struct {
+        pub const clap = std.build.Pkg{
+            .name = "clap",
+            .path = .{
+                .path = ".gyro\\zig-clap-Hejsil-github.com-********\\pkg\\clap.zig",
+            },
+        };
+
         pub fn addAllTo(artifact: *std.build.LibExeObjStep) void {
-            artifact.addPackagePath("clap", ".gyro\\zig-clap-Hejsil-github.com-*******\\pkg\\clap.zig");
+            artifact.addPackage(pkgs.clap);
         }
     };
     ``` 
