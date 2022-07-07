@@ -44,15 +44,14 @@ pub fn main() !u8 {
       defer app_dir.close();
 
       var resources_dir: ?std.fs.Dir = null;
-      var it = app_dir.iterate();
-      while (it.next() catch {
+      var app_it = app_dir.iterate();
+      while (app_it.next() catch {
          try stdOut.writeAll("Failed to iterate through the application directory, quitting.\n");
          return 1;
       }) |entry| {
          if (!std.mem.eql(u8, "resources", entry.name)) continue;
 
          resources_dir = try app_dir.openDir(entry.name, .{ .iterate = true });
-         defer resources_dir.?.close();
       }
 
       // Keep happ(y/ier) path, we can live with a few .? checks.
@@ -62,11 +61,12 @@ pub fn main() !u8 {
          );
          return 1;
       }
+      defer resources_dir.?.close();
 
       try stdOut.writeAll("Probing resources folder...\n");
       var state: InjectState = .{};
-      it = resources_dir.?.iterate();
-      while (it.next() catch {
+      var resources_it = resources_dir.?.iterate();
+      while (resources_it.next() catch {
          try stdOut.writeAll("Failed to iterate through the resources directory, quitting.\n");
          return 1;
       }) |entry| {
@@ -75,10 +75,10 @@ pub fn main() !u8 {
             state.found_app_folder = true;
          } else if (std.mem.eql(u8, "app.asar", entry.name)) {
             state.found_app_asar = true;
-         } else if (std.mem.eql(u8, "app_original.asar", entry.name)) {
-            state.found_app_original_asar = true;
-         } else if (std.mem.eql(u8, "app_original", entry.name)) {
+         } else if (std.mem.eql(u8, "app-original", entry.name)) {
             state.found_app_original_folder = true;
+         } else if (std.mem.eql(u8, "app-original.asar", entry.name)) {
+            state.found_app_original_asar = true;
          }
       }
 
