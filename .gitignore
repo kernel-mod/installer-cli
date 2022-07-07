@@ -1,3 +1,8 @@
-zig-*
-.gyro
-deps.zig
+# Zig toolchain.
+**/zig-out/
+**/zig-cache/
+
+# Gyro toolchain.
+**/.gyro
+**/deps.zig
+**/gyro.lock
