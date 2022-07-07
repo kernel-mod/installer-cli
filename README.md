@@ -32,7 +32,7 @@
    git clone https://github.com/kernel-mod/installer-cli.git
    cd installer-cli
    ```
-2. Run `gyro update` to update/install the required dependencies.
+2. Run `gyro fetch` to install the required dependencies.
    
     If you are using a build of `zig` that returns an error pointing to `deps.zig` when trying to
     build, replace the contents of that file with something akin to:

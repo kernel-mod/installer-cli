@@ -5,4 +5,3 @@
 # Gyro toolchain.
 **/.gyro
 **/deps.zig
-**/gyro.lock
