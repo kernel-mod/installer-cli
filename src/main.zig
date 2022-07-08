@@ -30,7 +30,7 @@ pub fn main() !u8 {
     defer clapped.deinit();
 
     var cwd_buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;
-    var kernel_path = clapped.args.inject orelse try std.os.getcwd(&cwd_buf);
+    var kernel_path = clapped.args.kernel orelse try std.os.getcwd(&cwd_buf);
 
     if (clapped.args.inject) |*inject_path| {
         try stdOut.writeAll("Attempting to inject Kernel...\n");
