@@ -93,11 +93,17 @@ pub fn main() !u8 {
       if (state.found_app_asar) {
          try stdOut.writeAll("Found an ASAR file, renaming.\n");
 
-         try res_dir.rename("app.asar", "app-original.asar");
+         res_dir.rename("app.asar", "app-original.asar") catch {
+            try cannotModifyResource(stdOut);
+            return 1;
+         };
       } else if (state.found_app_folder) {
          try stdOut.writeAll("Did not find an ASAR file, but found appropriate folder, renaming.\n");
 
-         try res_dir.rename("app", "app-original");
+         res_dir.rename("app", "app-original") catch {
+            try cannotModifyResource(stdOut);
+            return 1;
+         };
       } else {
          try stdOut.writeAll("Did not find an ASAR or appropriate folder, quitting.\n");
          return 1;
@@ -111,16 +117,12 @@ pub fn main() !u8 {
       defer inject_files_dir.close();
 
       var index_js = inject_files_dir.createFile("index.js", .{}) catch {
-         try stdOut.writeAll(
-            "The target application may still be open, quitting.\n"
-         );
+         try cannotModifyResource(stdOut);
          return 1;
       };
       defer index_js.close();
       var package_json = inject_files_dir.createFile("package.json", .{}) catch {
-         try stdOut.writeAll(
-            "The target application may still be open, quitting.\n"
-         );
+         try cannotModifyResource(stdOut);
          return 1;
       };
       defer package_json.close();
@@ -138,7 +140,7 @@ pub fn main() !u8 {
       };
       try package_json.writeAll(package_json_text);
 
-      try stdOut.writeAll("Successfully injected Kernel.");
+      try stdOut.writeAll("Successfully injected Kernel.\n");
 
       return 0;
    }
@@ -146,4 +148,10 @@ pub fn main() !u8 {
    try clap.help(stdOut.writer(), clap.Help, comptime &params, .{});
 
    return 0;
+}
+
+inline fn cannotModifyResource(writer: anytype) !void {
+   return writer.writeAll(
+      "The target application may still be open, or you don't have permission to modify the files. Quitting.\n"
+   );
 }
