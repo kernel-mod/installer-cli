@@ -55,13 +55,8 @@ pub fn main() !u8 {
          break;
       }
 
-      var res_dir = resources_dir orelse {
-         try stdOut.writeAll(
-            "The provided injection path does not appear to be for an Electron application.\n"
-         );
-         return 1;
-      };
-      defer res_dir.close();
+      var res_dir = resources_dir orelse app_dir;
+      defer if (resources_dir) |_| res_dir.close();
 
       try stdOut.writeAll("Probing resources folder...\n");
       var state: InjectState = .{};
@@ -88,7 +83,9 @@ pub fn main() !u8 {
          );
          return 1;
       }
-      try stdOut.writeAll("Found no existing injection, proceeding with detecting an ASAR.\n");
+      try stdOut.writeAll(
+         "Found no existing injection, proceeding with detecting application files.\n"
+      );
 
       if (state.found_app_asar) {
          try stdOut.writeAll("Found an ASAR file, renaming.\n");
