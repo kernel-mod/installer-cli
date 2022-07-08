@@ -33,7 +33,7 @@
    ```
    > `--recurse-submodules` is NOT optional, as we use them for depending on `zig-clap`.
 
-2. Run `zig build`.
+2. Run `zig build`, optionally passing the `-Drelease-fast` flag, for both a smaller and faster binary.
 
 ---
 
