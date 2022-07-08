@@ -52,21 +52,21 @@ pub fn main() !u8 {
          if (!std.mem.eql(u8, "resources", entry.name)) continue;
 
          resources_dir = try app_dir.openDir(entry.name, .{ .iterate = true });
+         break;
       }
 
-      // Keep happ(y/ier) path, we can live with a few .? checks.
-      if (resources_dir == null) {
+      var res_dir = resources_dir orelse {
          try stdOut.writeAll(
-            "The provided injection path does not appear to be for an Electron application.\n",
+            "The provided injection path does not appear to be for an Electron application.\n"
          );
          return 1;
-      }
-      defer resources_dir.?.close();
+      };
+      defer res_dir.close();
 
       try stdOut.writeAll("Probing resources folder...\n");
       var state: InjectState = .{};
-      var resources_it = resources_dir.?.iterate();
-      while (resources_it.next() catch {
+      var res_it = res_dir.iterate();
+      while (res_it.next() catch {
          try stdOut.writeAll("Failed to iterate through the resources directory, quitting.\n");
          return 1;
       }) |entry| {
@@ -93,11 +93,11 @@ pub fn main() !u8 {
       if (state.found_app_asar) {
          try stdOut.writeAll("Found an ASAR file, renaming.\n");
 
-         try resources_dir.?.rename("app.asar", "app-original.asar");
+         try res_dir.rename("app.asar", "app-original.asar");
       } else if (state.found_app_folder) {
          try stdOut.writeAll("Did not find an ASAR file, but found appropriate folder, renaming.\n");
 
-         try resources_dir.?.rename("app", "app-original");
+         try res_dir.rename("app", "app-original");
       } else {
          try stdOut.writeAll("Did not find an ASAR or appropriate folder, quitting.\n");
          return 1;
@@ -105,9 +105,9 @@ pub fn main() !u8 {
 
       try stdOut.writeAll("Creating injection files...\n");
 
-      try resources_dir.?.makeDir("app");
+      try res_dir.makeDir("app");
 
-      var inject_files_dir = try resources_dir.?.openDir("app", .{});
+      var inject_files_dir = try res_dir.openDir("app", .{});
       defer inject_files_dir.close();
 
       var index_js = inject_files_dir.createFile("index.js", .{}) catch {
