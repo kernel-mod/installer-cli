@@ -1,7 +1,3 @@
 # Zig toolchain.
 **/zig-out/
 **/zig-cache/
-
-# Gyro toolchain.
-**/.gyro
-**/deps.zig

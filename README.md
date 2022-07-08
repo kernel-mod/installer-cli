@@ -20,8 +20,7 @@
 #### Requirements
 
 - [Git](https://git-scm.com/), recommended. *You can also directly download the ZIP of the repository.*
-- [Zig](https://ziglang.org/download/), `>=0.9.0`.
-- [Gyro](https://github.com/mattnite/gyro), `>=0.7.0`.
+- [Zig](https://ziglang.org/download/), `>=0.9.1`.
 
 #### Steps
 
@@ -29,31 +28,12 @@
    
    ```sh
    # optionally, provide a destination path and/or use SSH
-   git clone https://github.com/kernel-mod/installer-cli.git
+   git clone https://github.com/kernel-mod/installer-cli.git --recurse-submodules
    cd installer-cli
    ```
-2. Run `gyro fetch` to install the required dependencies.
-   
-    If you are using a build of `zig` that returns an error pointing to `deps.zig` when trying to
-    build, replace the contents of that file with something akin to:
-    ```zig
-    const std = @import("std");
+   > `--recurse-submodules` is NOT optional, as we use them for depending on `zig-clap`.
 
-    pub const pkgs = struct {
-        pub const clap = std.build.Pkg{
-            .name = "clap",
-            .path = .{
-                .path = ".gyro\\zig-clap-Hejsil-github.com-********\\pkg\\clap.zig",
-            },
-        };
-
-        pub fn addAllTo(artifact: *std.build.LibExeObjStep) void {
-            artifact.addPackage(pkgs.clap);
-        }
-    };
-    ``` 
-
-3. Run `zig build`, `gyro build` is not necessary if using `gyro update` beforehand.
+2. Run `zig build`.
 
 ---
 
