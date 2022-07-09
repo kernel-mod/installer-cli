@@ -1,7 +1,9 @@
 const std = @import("std");
 
+const Builder = std.build.Builder;
 const CrossTarget = std.zig.CrossTarget;
 const Mode = std.builtin.Mode;
+const Pkg = std.build.Pkg;
 const Target = std.Target;
 
 const BuildTarget = struct {
@@ -10,8 +12,8 @@ const BuildTarget = struct {
     mode: Mode,
 };
 
-pub fn build(b: *std.build.Builder) void {
-    const zig_clap: std.build.Pkg = .{ .name = "clap", .path = .{ .path = "lib/zig-clap/clap.zig" } };
+pub fn build(b: *Builder) void {
+    const zig_clap: Pkg = .{ .name = "clap", .source = .{ .path = "lib/zig-clap/clap.zig" } };
     const compile_all_targets = b.option(bool, "all-targets", "Whether to compile for all supported targets.") orelse false;
 
     if (!compile_all_targets) {

@@ -20,7 +20,7 @@
 #### Requirements
 
 - [Git](https://git-scm.com/), recommended. *You can also directly download the ZIP of the repository.*
-- [Zig](https://ziglang.org/download/), `0.9.x`.
+- [Zig](https://ziglang.org/download/), `master`.
 
 #### Steps
 
