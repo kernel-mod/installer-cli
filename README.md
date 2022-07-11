@@ -1,25 +1,58 @@
-## Download
+## `installer-cli`
+
+> Make installing your favourite Electron modification both quick, and snappy!
+
+---
+
+### Table of Contents
+
+- [Building from Source](#building-from-source)
+    - [Requirements](#requirements)
+    - [Steps](#steps)
+- [Usage](#usage)
+- [Download](#download)
+- [Community](#community)
+
+---
+
+### Building from Source
+
+#### Requirements
+
+- [Git](https://git-scm.com/), recommended. *You can also directly download the ZIP of the repository.*
+- [Zig](https://ziglang.org/download/), `master`.
+
+#### Steps
+
+1. Clone this repository to your development environment.
+   
+   ```sh
+   # optionally, provide a destination path and/or use SSH
+   git clone https://github.com/kernel-mod/installer-cli.git --recurse-submodules
+   cd installer-cli
+   ```
+   > `--recurse-submodules` is NOT optional, as we use them for depending on `zig-clap`.
+
+2. Run `zig build`, optionally passing the `-Drelease-fast` flag, for both a smaller and faster binary.
+
+---
+
+### Usage
+
+```sh
+installer-cli --kernel path/to/kernel.asar/folder --inject path/to/electron/app/dir
+```
+
+If you require more help with usage, call `installer-cli` with no options, or the `--help` option.
+
+---
+
+### Download
 
 Get the build for your system from [releases](https://github.com/kernel-mod/installer-cli/releases/latest).
 
-## Community
+---
+
+### Community
 
 Join on [Discord](https://discord.gg/8mPTjTZ4SZ) or [Matrix](https://matrix.to/#/!iWdiwStUmqwDcNfYbG:bigdumb.gq?via=bigdumb.gq&via=catvibers.me&via=matrix.org).
-
-## Build From Source
-
-Real instructions coming soon. You need [Zig 0.9.0](https://ziglang.org/download/) or higher and [Gyro](https://github.com/mattnite/gyro).
-
-## Usage
-
-```bash
-installer-cli -i path/to/electron/app -k path/to/kernel
-```
-
-The `-i` flag specifies the path to the Electron app to inject into.
-
-It should be the path to the directory above the `resources` folder (or the '`resources`' folder itself, because of cases like discord\_arch\_electron/discord-canary-electron-bin on the AUR, which place the contents of the `resources` folder into `/usr/lib/discord` and `/usr/lib/discord-canary` respectively).
-
-For example on Windows for Discord: `C:/Users/Kyza/AppData/Local/Discord/app-XXXX/`
-
-The `-k` flag specifies the path to the folder Kernel is in.

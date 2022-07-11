@@ -1,0 +1,1 @@
+const[pkg,Module,path]=[require("./package.json"),require("module"),require("path")];try{const kernel=require(path.join(pkg.location,"kernel.asar"));if(kernel?.default)kernel.default({startOriginal:true});}catch(e){console.error("Kernel failed to load: ",e.message);Module._load(path.join(__dirname,"..","app-original.asar"),null,true);}

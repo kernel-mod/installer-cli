@@ -1,153 +1,158 @@
 const clap = @import("clap");
 const std = @import("std");
 
-const debug = std.debug;
-const io = std.io;
-const mem = std.mem;
-const time = std.time;
-const fs = std.fs;
+/// Injection state, regarding found folders.
+pub const InjectState = packed struct {
+    found_app_folder: bool = false,
+    found_app_asar: bool = false,
+    found_app_original_asar: bool = false,
+    found_app_original_folder: bool = false,
+};
 
-const allocator = std.heap.c_allocator;
+pub fn main() !u8 {
+    const stdOut = std.io.getStdOut();
+    const allocator = std.heap.c_allocator;
+    const params = comptime clap.parseParamsComptime(
+        \\-h, --help Display this help and exit.
+        \\-i, --inject <str> The path to the Electron application.
+        \\-u, --uninject <str> The path to the Electron application.
+        \\-k, --kernel <str> The path to the folder of your Kernel distribution, if not present the CWD will be used.
+        \\
+    );
 
-var timer: ?time.Timer = null;
+    var clap_diag: clap.Diagnostic = .{};
+    var clapped = clap.parse(clap.Help, &params, clap.parsers.default, .{
+        .diagnostic = &clap_diag,
+    }) catch |err| {
+        clap_diag.report(std.io.getStdErr().writer(), err) catch unreachable;
+        return 1;
+    };
+    defer clapped.deinit();
 
-pub fn main() !void {
-   timer = try time.Timer.start();
+    var cwd_buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+    var kernel_path = clapped.args.kernel orelse try std.os.getcwd(&cwd_buf);
 
-   const params = comptime [_]clap.Param(clap.Help) {
-      clap.parseParam("-h, --help Display this help and exit.") catch unreachable,
-      clap.parseParam("-i, --inject <STR> The path to the Electron app.") catch unreachable,
-      clap.parseParam("-u, --uninject <STR> The path to the Electron app.") catch unreachable,
-      clap.parseParam("-k, --kernel <STR> The path to your Kernel distro. If left out it uses the current directory.") catch unreachable,
-   };
+    if (clapped.args.inject) |*inject_path| {
+        try stdOut.writeAll("Attempting to inject Kernel...\n");
 
-   var diag = clap.Diagnostic{};
-   var args = clap.parse(clap.Help, &params, .{ .diagnostic = &diag }) catch |err| {
-      diag.report(io.getStdErr().writer(), err) catch {};
-      return err;
-   };
-   defer args.deinit();
+        var install_timer = std.time.Timer.start() catch null;
 
-   if (args.option("--inject")) |inject| {
-      if (args.option("--kernel")) |kernel| {
-         debug.print("Injecting...\n", .{});
+        inject_path.* = try std.fs.path.resolve(allocator, &[_][]const u8{inject_path.*});
+        defer allocator.free(inject_path.*);
+        kernel_path = try std.fs.path.resolve(allocator, &[_][]const u8{kernel_path});
+        defer allocator.free(kernel_path);
 
-         const kernel_path = try fs.path.resolve(allocator, &[_][]const u8{ kernel });
+        var app_dir = try std.fs.openDirAbsolute(inject_path.*, .{ .iterate = true });
+        defer app_dir.close();
 
-         const app_path = try fs.path.resolve(allocator, &[_][]const u8{ inject });
+        var resources_dir: ?std.fs.Dir = null;
+        var app_it = app_dir.iterate();
+        while (app_it.next() catch {
+            try stdOut.writeAll("Failed to iterate through the application directory, quitting.\n");
+            return 1;
+        }) |entry| {
+            if (!std.mem.eql(u8, "resources", entry.name)) continue;
 
-         var resources_path = try fs.path.join(allocator, &[_][]const u8{ app_path, "resources" });
+            resources_dir = try app_dir.openDir(entry.name, .{ .iterate = true });
+            break;
+        }
 
-         // Test if the folder is (probably) either a valid electron app path or an app resources path.
-         _ = fs.openDirAbsolute(resources_path, .{}) catch {
-            resources_path = app_path;
-         };
+        var res_dir = resources_dir orelse app_dir;
+        defer if (resources_dir) |_| res_dir.close();
 
-         const app_folder_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app" });
-         const app_asar_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app.asar" });
+        try stdOut.writeAll("Probing resources folder...\n");
+        var state: InjectState = .{};
+        var res_it = res_dir.iterate();
+        while (res_it.next() catch {
+            try stdOut.writeAll("Failed to iterate through the resources directory, quitting.\n");
+            return 1;
+        }) |entry| {
+            // Can't switch on non-comptime prongs, e.g switch (true) {...} isn't possible.
+            if (std.mem.eql(u8, "app", entry.name)) {
+                state.found_app_folder = true;
+            } else if (std.mem.eql(u8, "app.asar", entry.name)) {
+                state.found_app_asar = true;
+            } else if (std.mem.eql(u8, "app-original", entry.name)) {
+                state.found_app_original_folder = true;
+            } else if (std.mem.eql(u8, "app-original.asar", entry.name)) {
+                state.found_app_original_asar = true;
+            }
+        }
 
-         const app_folder_index_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app", "index.js" });
-         const app_folder_package_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app", "package.json" });
+        if (state.found_app_original_asar or state.found_app_original_folder or state.found_app_folder and state.found_app_asar) {
+            try stdOut.writeAll("Found an existing injection, quitting.\n");
+            return 1;
+        }
+        try stdOut.writeAll("Found no existing injection, proceeding with detecting application files.\n");
 
-         const app_original_folder_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app-original" });
-         const app_original_asar_path = try fs.path.join(allocator, &[_][]const u8{ resources_path, "app-original.asar" });
+        if (state.found_app_asar) {
+            try stdOut.writeAll("Found an ASAR file, renaming.\n");
 
-         debug.print("Detecting injection...\n", .{});
-         var injected = true;
-         _ = fs.openDirAbsolute(app_original_folder_path, .{}) catch {
-            injected = false;
-         };
-         if (injected) alreadyInjected();
-         injected = true;
-         _ = fs.openFileAbsolute(app_original_asar_path, .{}) catch {
-            injected = false;
-         };
-         if (injected) alreadyInjected();
+            res_dir.rename("app.asar", "app-original.asar") catch {
+                try cannotModifyResource(stdOut);
+                return 1;
+            };
+        } else if (state.found_app_folder) {
+            try stdOut.writeAll("Did not find an ASAR file, but found appropriate folder, renaming.\n");
 
-         debug.print("No injection visible.\n", .{});
-         debug.print("Detecting ASAR.\n", .{});
-         var usesAsar = false;
-         _ = fs.openDirAbsolute(app_asar_path, .{}) catch {
-            usesAsar = true;
-         };
-         debug.print("Uses ASAR: {s}\n", .{ usesAsar });
-         debug.print("Renaming...\n", .{});
-         if (usesAsar) {
-            fs.renameAbsolute(app_asar_path, app_original_asar_path) catch appRunning();
-         } else {
-            fs.renameAbsolute(app_folder_path, app_original_folder_path) catch appRunning();
-         }
+            res_dir.rename("app", "app-original") catch {
+                try cannotModifyResource(stdOut);
+                return 1;
+            };
+        } else {
+            try stdOut.writeAll("Did not find an ASAR or appropriate folder, quitting.\n");
+            return 1;
+        }
 
-         debug.print("Adding files.\n", .{});
-         try fs.makeDirAbsolute(app_folder_path);
+        try stdOut.writeAll("Creating injection files...\n");
 
-         const index = try fs.createFileAbsolute(app_folder_index_path, .{});
-         const package = try fs.createFileAbsolute(app_folder_package_path, .{});
-         defer index.close();
-         defer package.close();
+        try res_dir.makeDir("app");
 
-         try index.writeAll(
-            \\const pkg = require("./package.json");
-            \\const Module = require("module");
-            \\const path = require("path");
-            \\
-            \\try {
-            \\  const kernel = require(path.join(pkg.location, "kernel.asar"));
-            \\  if (kernel?.default) kernel.default({ startOriginal: true });
-            \\} catch(e) {
-            \\  console.error("Kernel failed to load: ", e.message);
-            \\  Module._load(path.join(__dirname, "..", "app-original.asar"), null, true);
-            \\}
-         );
+        var inject_files_dir = try res_dir.openDir("app", .{});
+        defer inject_files_dir.close();
 
-         const package_start = "{\"main\":\"index.js\",\"location\":\"";
-         const package_end = "\"}";
+        var index_js = inject_files_dir.createFile("index.js", .{}) catch {
+            try cannotModifyResource(stdOut);
+            return 1;
+        };
+        defer index_js.close();
+        var package_json = inject_files_dir.createFile("package.json", .{}) catch {
+            try cannotModifyResource(stdOut);
+            return 1;
+        };
+        defer package_json.close();
 
-         const package_json = try mem.join(allocator, "", &[_][]const u8{ package_start, kernel_path, package_end });
-         defer allocator.free(package_json);
-         try package.writeAll(try replaceSlashes(package_json));
-         if (timer) |t| {
-            const end_time = t.read();
-            debug.print("Done in: {d}\n", .{ std.fmt.fmtDuration(end_time) });
-         }
+        try index_js.writeAll(@embedFile("./index.js"));
 
-         return std.os.exit(0);
-      }
-   }
+        var package_json_text = try std.mem.join(allocator, "", &[_][]const u8{ "{\"main\":\"index.js\",\"location\":\"", kernel_path, "\"}" });
+        defer allocator.free(package_json_text);
 
-   try clap.help(
-      io.getStdErr().writer(),
-      comptime &params
-   );
+        for (package_json_text) |ch, i| if (ch == '\\') {
+            package_json_text[i] = '/';
+        };
+        try package_json.writeAll(package_json_text);
 
-   std.os.exit(0);
+        if (install_timer) |*timer| {
+            var finished_time = timer.read();
+            var buf: [31]u8 = undefined;
+            var fixed_bs = std.io.fixedBufferStream(&buf);
+
+            try std.fmt.format(fixed_bs.writer(), "took {d}.\n", .{std.fmt.fmtDuration(finished_time)});
+
+            var finished_message = try std.mem.join(allocator, " ", &[_][]const u8{ "Successfully injected Kernel,", fixed_bs.getWritten() });
+            defer allocator.free(finished_message);
+
+            try stdOut.writeAll(finished_message);
+        } else try stdOut.writeAll("Successfully injected Kernel.\n");
+
+        return 0;
+    }
+
+    try clap.help(stdOut.writer(), clap.Help, comptime &params, .{});
+
+    return 0;
 }
 
-pub fn invalidAppDir() void {
-   debug.print("Invalid Electron app directory.\n", .{});
-   std.os.exit(0);
-}
-
-pub fn alreadyInjected() void {
-   debug.print("Something is already injected there.\n", .{});
-   std.os.exit(0);
-}
-
-pub fn appRunning() void {
-   debug.print("The app is running, close it before injecting.\n", .{});
-   std.os.exit(0);
-}
-
-pub fn replaceSlashes(string: []const u8) ![]u8 {
-   const result = try allocator.alloc(u8, string.len);
-   var i: i128 = 0;
-   for (string) |char| {
-      if (char == '\\') {
-         result[@intCast(usize, i)] = '/';
-      } else {
-         result[@intCast(usize, i)] = char;
-      }
-      i += 1;
-   }
-   return result;
+inline fn cannotModifyResource(writer: anytype) !void {
+    return writer.writeAll("The target application may still be open, or you don't have permission to modify the files. Quitting.\n");
 }
