@@ -2,26 +2,22 @@ const std = @import("std");
 
 const Builder = std.build.Builder;
 const CrossTarget = std.zig.CrossTarget;
-const Mode = std.builtin.Mode;
 const Pkg = std.build.Pkg;
 const Target = std.Target;
 
-const BuildTarget = struct {
-    name: []const u8,
-    cross_target: CrossTarget,
-    mode: Mode,
-};
-
 pub fn build(b: *Builder) void {
+    const mode = b.standardReleaseOptions();
+
     const zig_clap: Pkg = .{ .name = "clap", .source = .{ .path = "lib/zig-clap/clap.zig" } };
+
+    const strip_binaries = b.option(bool, "strip", "Whether to strip all resulting binaries.") orelse false;
     const compile_all_targets = b.option(bool, "all-targets", "Whether to compile for all supported targets.") orelse false;
 
     if (!compile_all_targets) {
         const target = b.standardTargetOptions(.{});
-        const mode = b.standardReleaseOptions();
 
         const exe = b.addExecutable("installer-cli", "src/main.zig");
-        exe.strip = true;
+        exe.strip = strip_binaries;
         exe.single_threaded = true;
 
         exe.linkLibC();
@@ -34,39 +30,55 @@ pub fn build(b: *Builder) void {
         return;
     }
 
-    const targets = [_]BuildTarget{
-        .{ .name = "kernel-installer-i386-windows", .cross_target = .{
-            .cpu_arch = Target.Cpu.Arch.i386,
-            .os_tag = Target.Os.Tag.windows,
-        }, .mode = Mode.ReleaseFast },
-        .{ .name = "kernel-installer-x86_64-windows", .cross_target = .{
-            .cpu_arch = Target.Cpu.Arch.x86_64,
-            .os_tag = Target.Os.Tag.windows,
-        }, .mode = Mode.ReleaseFast },
-        .{ .name = "kernel-installer-i386-linux", .cross_target = .{
+    const targets = [_]CrossTarget{
+        .{
+            .cpu_arch = Target.Cpu.Arch.aarch64,
+            .os_tag = Target.Os.Tag.linux,
+        },
+        .{
             .cpu_arch = Target.Cpu.Arch.i386,
             .os_tag = Target.Os.Tag.linux,
-        }, .mode = Mode.ReleaseFast },
-        .{ .name = "kernel-installer-x86_64-linux", .cross_target = .{
+        },
+        .{
             .cpu_arch = Target.Cpu.Arch.x86_64,
             .os_tag = Target.Os.Tag.linux,
-        }, .mode = Mode.ReleaseFast },
-        .{ .name = "kernel-installer-x86_64-macos", .cross_target = .{
+        },
+        .{
+            .cpu_arch = Target.Cpu.Arch.aarch64,
+            .os_tag = Target.Os.Tag.macos,
+        },
+        .{
             .cpu_arch = Target.Cpu.Arch.x86_64,
             .os_tag = Target.Os.Tag.macos,
-        }, .mode = Mode.ReleaseFast },
+        },
+        .{
+            .cpu_arch = Target.Cpu.Arch.i386,
+            .os_tag = Target.Os.Tag.windows,
+        },
+        .{
+            .cpu_arch = Target.Cpu.Arch.x86_64,
+            .os_tag = Target.Os.Tag.windows,
+        },
     };
 
-    for (targets) |target| {
-        const target_exe = b.addExecutable(target.name, "src/main.zig");
-        target_exe.strip = true;
+    inline for (targets) |target| {
+        const target_name = comptime std.fmt.comptimePrint(
+            "installer-cli_{s}_{s}",
+            .{
+                @tagName(target.os_tag.?),
+                @tagName(target.cpu_arch.?)
+            }
+        );
+
+        const target_exe = b.addExecutable(target_name, "src/main.zig");
+        target_exe.strip = strip_binaries;
         target_exe.single_threaded = true;
 
         target_exe.linkLibC();
         target_exe.addPackage(zig_clap);
 
-        target_exe.setTarget(target.cross_target);
-        target_exe.setBuildMode(target.mode);
+        target_exe.setTarget(target);
+        target_exe.setBuildMode(mode);
         target_exe.install();
     }
 }

@@ -31,7 +31,7 @@ jobs:
           version: 0.9.1
 
       - name: Build Artifacts
-        run: zig build -Dall-targets
+        run: zig build -Dstrip -Drelease-fast -Dall-targets
 
       - name: Create Release
         uses: softprops/action-gh-release@v0.1.14
